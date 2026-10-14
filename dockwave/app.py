@@ -4,6 +4,8 @@ import argparse
 import os
 import sys
 
+from . import __version__
+
 
 def build_parser():
     win = sys.platform == "win32"
@@ -11,6 +13,8 @@ def build_parser():
         prog="dockwave",
         description="Eine eigene Dock-Leiste mit weicher Icon-Vergroesserung.",
     )
+    p.add_argument("--version", action="version",
+                   version="Dockwave %s" % __version__)
     p.add_argument("--position", choices=("bottom", "top", "left", "right"),
                    help="Wo die Leiste sitzt (Standard: unten).")
     p.add_argument("--layer", choices=("desktop", "floating", "top"),

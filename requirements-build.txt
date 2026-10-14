@@ -1,0 +1,5 @@
+# Zusatzpakete, die nur zum Bauen der portablen .exe noetig sind.
+# Normale Nutzer brauchen nur requirements.txt.
+
+PyQt6>=6.6
+pyinstaller>=6.0
