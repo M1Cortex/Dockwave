@@ -10,15 +10,16 @@ Aufruf:  python tools/settings_test.py
 """
 
 import os
-import shutil
 import sys
-import tempfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import dockwave.config as config_mod                        # noqa: E402
+from _testconfig import schutz, zuruecksetzen               # noqa: E402
+schutz()  # muss vor dem ersten Zugriff auf dockwave.config stehen
+
 from dockwave.config import APP, SEPARATOR, STACK, Config    # noqa: E402
 from dockwave.dock_window import DockWindow                  # noqa: E402
 from dockwave.qt import QtCore, QtWidgets              # noqa: E402
@@ -42,33 +43,15 @@ def check(condition, message):
         FAILURES.append(message)
 
 
-def _temp_konfiguration():
-    """Die echte Konfiguration fuer diesen Lauf unsichtbar machen."""
-    echtes_dir = config_mod.APP_DIR
-    echter_pfad = config_mod.CONFIG_PATH
-    temp = tempfile.mkdtemp(prefix="dockwave-test-")
-    config_mod.APP_DIR = temp
-    config_mod.CONFIG_PATH = os.path.join(temp, "dock.json")
-    return temp, echtes_dir, echter_pfad
-
-
-def _zuruecksetzen():
-    config_mod.APP_DIR, config_mod.CONFIG_PATH = ECHTES_DIR, ECHTER_PFAD
-
-
 def main():
-    global ECHTES_DIR, ECHTER_PFAD
-
     # Wichtig: Die QApplication muss in einer Variablen stehen bleiben.
     app = QtWidgets.QApplication(sys.argv[:1])
     _ = app
 
-    temp, ECHTES_DIR, ECHTER_PFAD = _temp_konfiguration()
     try:
         laufen()
     finally:
-        _zuruecksetzen()
-        shutil.rmtree(temp, ignore_errors=True)
+        zuruecksetzen()
 
     print("\n%d Pruefungen, %d Fehler" % (PRUEFUNGEN[0], len(FAILURES)))
     return 1 if FAILURES else 0
@@ -332,5 +315,4 @@ def laufen():
 
 
 if __name__ == "__main__":
-    ECHTES_DIR, ECHTER_PFAD = None, None
     sys.exit(main())

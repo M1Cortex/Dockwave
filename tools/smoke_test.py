@@ -11,6 +11,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from _testconfig import schutz                              # noqa: E402
+schutz()  # muss vor dem ersten Zugriff auf dockwave.config stehen
+
 from dockwave.config import APP, SEPARATOR, STACK, Config      # noqa: E402
 from dockwave.dock_window import DockWindow                    # noqa: E402
 from dockwave.qt import QtCore, QtGui, QtWidgets               # noqa: E402

@@ -5,16 +5,14 @@ Aufruf:  python3 tools/interaction_test.py
 
 import os
 import sys
-import tempfile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Eigene Konfiguration benutzen, damit die echte nicht angefasst wird.
 import dockwave.config as config_mod                       # noqa: E402
-_config_dir = tempfile.mkdtemp(prefix="dockwave-test-")
-config_mod.APP_DIR = _config_dir
-config_mod.CONFIG_PATH = os.path.join(_config_dir, "dock.json")
+from _testconfig import schutz                              # noqa: E402
+schutz()
 
 from dockwave.config import APP, STACK, Config             # noqa: E402
 from dockwave.dock_window import DockWindow                 # noqa: E402

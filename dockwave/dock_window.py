@@ -563,8 +563,11 @@ class DockWindow(QtWidgets.QWidget):
         self._dot_timer.stop()
 
     def closeEvent(self, event):
+        # Wichtig: hier wird bewusst NICHT gespeichert. Die Anwendung
+        # speichert beim Beenden (siehe app.py), und wenn ein Testlauf das
+        # Fenster schliesst, wuerden sonst Testdaten in der echten
+        # Konfiguration landen.
         self.stop()
-        self.config.save()
         super().closeEvent(event)
 
     def _on_frame(self):
