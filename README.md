@@ -78,9 +78,11 @@ Leiste und verdeckt sie nicht.
 | **Programme** | Hinzufügen, entfernen, sortieren, Trenner setzen |
 
 **Abstand** ist der Grundabstand zwischen den Icons. **Innenabstand** kommt
-dazu und wirkt an zwei Stellen: als zusätzliche Luft zwischen den Icons und
-als Abstand vom Rand des Panels. Beide Regler bleiben unabhängig; der
-tatsächliche Abstand zweier Icons ist ihre Summe.
+dazu und wirkt ausschließlich **in der Breite**: er schiebt die Icons
+auseinander und macht den Rand nach links und nach rechts größer. Die Höhe
+der Leiste ändert sich dadurch **nicht** — nur die Breite wächst. Beide Regler
+bleiben unabhängig; der tatsächliche Abstand zweier Icons ist ihre Summe.
+Werte von 2 bis 100 px.
 
 **Standard** setzt die Zahlenwerte zurück und lässt die Programme unberührt.
 Beim Schließen wird gespeichert.

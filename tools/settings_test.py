@@ -146,7 +146,7 @@ def laufen():
     dialog._setze("fps", 5)
     check(cfg.fps == 24, "Bildrate begrenzt auf 24 (%d)" % cfg.fps)
     dialog._setze("padding", 999)
-    check(cfg.padding == 40, "Innenabstand begrenzt auf 40 (%d)" % cfg.padding)
+    check(cfg.padding == 100, "Innenabstand begrenzt auf 100 (%d)" % cfg.padding)
 
     print("\n== Position und Ebene wirken auf das Fenster ==")
     unten = dock.y()
@@ -275,30 +275,32 @@ def laufen():
         """Alle Groessen, die der Innenabstand beeinflussen darf."""
         dock._layout(dock._cursor_x)
         panel = dock._panel_rect
+        icons = dock._bounds
         return {
             "panel_breit": panel.width(),
             "panel_hoch": panel.height(),
-            "panel_links": panel.left(),
             "fenster": (dock.width(), dock.height()),
-            "icons": [round(b.width(), 2) for b in dock._bounds],
-            "abstaende": [round(dock._bounds[i + 1].left()
-                                - dock._bounds[i].right(), 2)
-                          for i in range(len(dock._bounds) - 1)],
-            "linker_abstand": round(dock._bounds[0].left() - panel.left(), 2),
-            "rechter_abstand": round(panel.right() - dock._bounds[-1].right(), 2),
+            "icons": [round(b.width(), 2) for b in icons],
+            "icon_mitte": round(dock._icon_center_y(), 2),
+            "abstaende": [round(icons[i + 1].left() - icons[i].right(), 2)
+                          for i in range(len(icons) - 1)],
+            "links": round(icons[0].left() - panel.left(), 2),
+            "rechts": round(panel.right() - icons[-1].right(), 2),
+            "oben": round(icons[0].top() - panel.top(), 2),
+            "unten": round(panel.bottom() - icons[0].bottom(), 2),
         }
 
     dock._cursor_x = -1.0e9          # Zeiger weg: reine Ruhelage
     dock._cursor_y = -1.0e9
 
     schieber = dialog._regler["padding"][0]
-    check((schieber.minimum(), schieber.maximum()) == (2, 40),
+    check((schieber.minimum(), schieber.maximum()) == (2, 100),
           "der Regler laeuft von %d bis %d px"
           % (schieber.minimum(), schieber.maximum()))
 
     schieber.setValue(2)
     eng = _masse()
-    schieber.setValue(40)
+    schieber.setValue(100)
     weit = _masse()
     schieber.setValue(10)
     normal = _masse()
@@ -307,41 +309,49 @@ def laufen():
     def _ist(ist, soll):
         return abs(ist - soll) < 0.01
 
-    check(_ist(weit["panel_breit"] - eng["panel_breit"],
-              2 * (40 - 2) + (40 - 2) * (len(weit["icons"]) - 1)),
-          "das Panel waechst um Rand *und* Iconabstand (%.1f zu %.1f px)"
-          % (eng["panel_breit"], weit["panel_breit"]))
-    check(_ist(weit["panel_hoch"] - eng["panel_hoch"], 2 * (40 - 2)),
-          "die Panelhoehe genauso (%.1f zu %.1f px)"
+    # --- Das Herz der Sache: nach links und rechts, niemals nach oben ---
+    check(_ist(weit["panel_hoch"], eng["panel_hoch"]),
+          "die Panelhoehe bleibt exakt gleich: %.1f px bei 2 und %.1f px bei 100"
           % (eng["panel_hoch"], weit["panel_hoch"]))
-    schritt = 10 - 2
-    erwartet = 2 * schritt + schritt * len(normal["abstaende"])
-    check(_ist(normal["panel_breit"] - eng["panel_breit"], erwartet),
-          "und auch dazwischen stimmt es: Rand %dx%d, Iconabstaende %dx%d"
-          % (normal["panel_breit"] - eng["panel_breit"], schritt,
-             len(normal["abstaende"]), schritt))
+    check(weit["fenster"][1] == eng["fenster"][1],
+          "das Fenster waechst nicht in die Hoehe (%d px in beiden)"
+          % eng["fenster"][1])
+    check(_ist(weit["icon_mitte"], eng["icon_mitte"]),
+          "die Icon-Mitte bleibt auf gleicher Hoehe (%.1f px)"
+          % eng["icon_mitte"])
+    check(_ist(weit["oben"], eng["oben"]) and _ist(weit["unten"], eng["unten"]),
+          "oben und unten aendern sich nicht (%.0f px)" % eng["oben"])
 
-    check(eng["linker_abstand"] == 2 and weit["linker_abstand"] == 40,
-          "links steht der eingestellte Abstand: %d px bzw. %d px"
-          % (eng["linker_abstand"], weit["linker_abstand"]))
-    check(eng["rechter_abstand"] == 2 and weit["rechter_abstand"] == 40,
-          "rechts genauso: %d px bzw. %d px"
-          % (eng["rechter_abstand"], weit["rechter_abstand"]))
-
+    # --- Und nach links/rechts plus zwischen den Icons ---
+    check(_ist(eng["links"], 2) and _ist(weit["links"], 100),
+          "links steht der eingestellte Abstand: %.0f px bzw. %.0f px"
+          % (eng["links"], weit["links"]))
+    check(_ist(eng["rechts"], 2) and _ist(weit["rechts"], 100),
+          "rechts genauso: %.0f px bzw. %.0f px"
+          % (eng["rechts"], weit["rechts"]))
     check(eng["icons"] == weit["icons"],
-          "die Icons selbst bleiben gleich gross (%s px)"
-          % eng["icons"][0])
-    check(weit["abstaende"][0] - eng["abstaende"][0] == 40 - 2,
-          "die Icons ruecken um den Innenabstand auseinander: %d -> %d px"
+          "die Icons selbst bleiben gleich gross (%.0f px)" % eng["icons"][0])
+    check(_ist(weit["abstaende"][0] - eng["abstaende"][0], 100 - 2),
+          "die Icons ruecken auseinander: %.0f -> %.0f px"
           % (eng["abstaende"][0], weit["abstaende"][0]))
-    check(weit["abstaende"] == [cfg.spacing + 40] * len(weit["abstaende"]),
-          "der Abstand ist 'Abstand' + Innenabstand = %d px"
+    check(_ist(weit["abstaende"][0], cfg.spacing + 100),
+          "der Abstand ist 'Abstand' + Innenabstand = %.0f px"
           % weit["abstaende"][0])
     check(cfg.spacing == 28,
           "der eigene Regler 'Abstand' bleibt unberuehrt (%d px)" % cfg.spacing)
-    check(weit["fenster"][0] > eng["fenster"][0]
-          and weit["fenster"][1] > eng["fenster"][1],
-          "das Fenster waechst mit: %s zu %s" % (eng["fenster"], weit["fenster"]))
+
+    schritt = 100 - 2
+    erwartet = 2 * schritt + schritt * len(weit["abstaende"])
+    check(_ist(weit["panel_breit"] - eng["panel_breit"], erwartet),
+          "in die Breite waechst das Panel um Rand 2x%d px und %d Iconabstaende"
+          % (schritt, len(weit["abstaende"])))
+    check(_ist(normal["panel_breit"] - eng["panel_breit"],
+               2 * 8 + 8 * len(normal["abstaende"])),
+          "und bei 10 px genauso: Rand 2x8 px und %d Iconabstaende"
+          % len(normal["abstaende"]))
+    check(weit["fenster"][0] > eng["fenster"][0],
+          "das Fenster waechst nur nach rechts: %d zu %d px"
+          % (eng["fenster"][0], weit["fenster"][0]))
 
     schieber.setValue(20)
     check(cfg.padding == 20, "der Wert steht in der Konfiguration (%d)"
@@ -350,7 +360,7 @@ def laufen():
         check(json.load(fh)["padding"] == 20, "und ist gespeichert")
 
     dialog._setze("padding", 999)
-    check(cfg.padding == 40, "zu grosse Werte werden begrenzt (%d)" % cfg.padding)
+    check(cfg.padding == 100, "zu grosse Werte werden begrenzt (%d)" % cfg.padding)
     dialog._setze("padding", -5)
     check(cfg.padding == 2, "zu kleine Werte ebenso (%d)" % cfg.padding)
 
@@ -362,7 +372,7 @@ def laufen():
           % (flaeche.width(), dock._panel_rect.width()))
 
     print("\n== Innenabstand beim Vergrößern ==")
-    for wert in (2, 40):
+    for wert in (2, 100):
         schieber.setValue(wert)
         dock._cursor_x = dock._bounds[1].center().x()
         dock._cursor_y = dock._bounds[1].center().y()
@@ -371,12 +381,10 @@ def laufen():
         groesstes = max(dock._bounds, key=lambda b: b.width())
         oben = groesstes.top() - panel.top()
         unten = panel.bottom() - groesstes.bottom()
-        check(oben >= wert - 0.01 and unten >= wert - 0.01,
-              "bei %d px Innenabstand ragt das groesste Icon nicht ueber "
-              "den Rand (oben %.0f, unten %.0f)" % (wert, oben, unten))
-        check(dock._bounds[1].center().x() == groesstes.center().x()
-              or abs(dock._bounds[1].center().x()
-                     - groesstes.center().x()) < 1.0,
+        check(oben >= -0.01 and unten >= -0.01,
+              "bei %d px ragt das groesste Icon nicht aus dem Panel "
+              "(oben %.0f, unten %.0f)" % (wert, oben, unten))
+        check(abs(dock._bounds[1].center().x() - groesstes.center().x()) < 1.0,
               "das groesste Icon liegt noch unter dem Zeiger")
     schieber.setValue(10)
     dock.leaveEvent(None)

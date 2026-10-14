@@ -61,7 +61,7 @@ class SettingsDialog(QtWidgets.QDialog):
                        lambda w: self._setze("radius", w))
         self._schieber(zl, 3, "spacing", "Abstand", 0, 40, "px",
                        lambda w: self._setze("spacing", w))
-        self._schieber(zl, 4, "padding", "Innenabstand", 2, 40, "px",
+        self._schieber(zl, 4, "padding", "Innenabstand", 2, 100, "px",
                        lambda w: self._setze("padding", w))
         self._schieber(zl, 5, "fps", "Bildrate", 24, 144, "fps",
                        lambda w: self._setze("fps", w))

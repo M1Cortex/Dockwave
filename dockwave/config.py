@@ -173,7 +173,7 @@ class Config:
         self.magnification = min(3.5, max(1.0, float(self.magnification)))
         self.radius = min(600, max(40, int(self.radius)))
         self.spacing = min(40, max(0, int(self.spacing)))
-        self.padding = min(40, max(2, int(self.padding)))
+        self.padding = min(100, max(2, int(self.padding)))
         self.fps = min(144, max(24, int(self.fps)))
         if self.position not in POSITIONS:
             self.position = "top"

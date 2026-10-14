@@ -198,8 +198,14 @@ class DockWindow(QtWidgets.QWidget):
         return h
 
     def _icon_center_y(self):
-        """Vertikale Mitte der Icon-Reihe (alle Icons liegen auf dieser Linie)."""
-        return SHADOW + self.config.padding + self._content_height() / 2.0
+        """Vertikale Mitte der Icon-Reihe (alle Icons liegen auf dieser Linie).
+
+        Der Innenabstand wirkt bewusst *nicht* auf die Hoehe: er waechst nur
+        nach links und nach rechts. Die Leiste soll beim Auseinanderziehen
+        nicht in die Hoehe wachsen - dann wuerde sie beim Verschieben des
+        Reglers springen, weil sich die Icon-Mitte mitverschiebt.
+        """
+        return SHADOW + self._content_height() / 2.0
 
     def _recompute_window_geometry(self):
         screen = self._screen or QtGui.QGuiApplication.primaryScreen()
@@ -209,8 +215,9 @@ class DockWindow(QtWidgets.QWidget):
         avail = screen.availableGeometry()
 
         width = int(math.ceil(self._widest_layout_width()))
-        height = int(math.ceil(self._content_height()
-                               + 2 * (self.config.padding + SHADOW)))
+        # Die Hoehe haengt nur an Icon-Groesse und Vergroesserung, nicht am
+        # Innenabstand. Der Innenabstand waechst ausschliesslich in die Breite.
+        height = int(math.ceil(self._content_height() + 2 * SHADOW))
         width = max(80, min(width, geo.width()))
         height = max(50, min(height, geo.height()))
 
@@ -347,9 +354,9 @@ class DockWindow(QtWidgets.QWidget):
             self._hover_index = -1
             return
 
-        pad = self.config.padding
+        pad = self.config.padding   # wirkt nur nach links und nach rechts
         content_h = self._content_height()
-        center_y = SHADOW + pad + content_h / 2.0
+        center_y = SHADOW + content_h / 2.0
 
         gate = self._activation(cursor_x)
         # Der Cursor wird immer gegen die Ruhelage des Docks gemessen, nicht
@@ -385,7 +392,7 @@ class DockWindow(QtWidgets.QWidget):
         ]
 
         self._panel_rect = QtCore.QRectF(offset + left_edge - pad, SHADOW,
-                                         width, content_h + 2 * pad)
+                                         width, content_h)
 
         self._update_tooltip(hover)
 
