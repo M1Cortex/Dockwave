@@ -124,9 +124,14 @@ def main():
     print("\n== Panel waechst und schrumpft stetig ==")
     dock._layout(-1.0e9)
     rest = dock._panel_rect.width()
+    # Der Zeiger wird in Fensterguerteln gesetzt - so, wie Qt es spaeter auch
+    # liefert. Dock-Koordinaten hier waeren ein Vergleich zweier verschiedener
+    # Bezugssysteme und ergaeben je nach Leistenbreite falsche Werte.
+    start = dock._bounds[1].left() - 40.0
+    span = dock._panel_rect.right() - start
     widths = []
     for step in range(0, 201):
-        dock._cursor_x = centers[1] - rest + step * rest / 200.0
+        dock._cursor_x = start + step * span / 200.0
         dock._layout(dock._cursor_x)
         widths.append(dock._panel_rect.width())
     check(max(widths) >= rest, "Panel wird beim Hover breiter: %.0f -> %.0f"

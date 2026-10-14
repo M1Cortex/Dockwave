@@ -16,7 +16,7 @@ def build_parser():
     p.add_argument("--version", action="version",
                    version="Dockwave %s" % __version__)
     p.add_argument("--position", choices=("bottom", "top", "left", "right"),
-                   help="Wo die Leiste sitzt (Standard: unten).")
+                   help="Wo die Leiste sitzt (Standard: oben).")
     p.add_argument("--layer", choices=("desktop", "floating", "top"),
                    help="desktop = hinter Fenstern, floating = immer sichtbar, "
                         "top = ganz oben (Standard: desktop).")

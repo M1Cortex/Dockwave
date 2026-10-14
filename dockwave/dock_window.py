@@ -89,6 +89,8 @@ class DockWindow(QtWidgets.QWidget):
         self._drag_pos = None
         self._drag_target = -1
 
+        self._settings = None     # offenes Einstellungsfenster
+
         self._build_pixmaps()
         self._recompute_window_geometry()
 
@@ -560,6 +562,11 @@ class DockWindow(QtWidgets.QWidget):
         self._timer.stop()
         self._dot_timer.stop()
 
+    def closeEvent(self, event):
+        self.stop()
+        self.config.save()
+        super().closeEvent(event)
+
     def _on_frame(self):
         previous = self._hover_index
         self._layout(self._cursor_x)
@@ -697,11 +704,63 @@ class DockWindow(QtWidgets.QWidget):
         self._dirty = True
 
     # ==================================================================
+    # Einstellungen
+    # ==================================================================
+
+    def _anwenden(self, feld):
+        """Eine geaenderte Einstellung auf die Leiste uebertragen.
+
+        Das Einstellungsfenster aendert die Werte direkt in der
+        Konfiguration; hier passiert das, was sich daraus ergibt.
+        """
+        if feld == "layer":
+            self._apply_layer()
+        elif feld == "position":
+            self._screen = QtGui.QGuiApplication.primaryScreen()
+            self._recompute_window_geometry()
+        elif feld == "fps":
+            self._timer.setInterval(max(4, int(1000 / max(1, self.config.fps))))
+            self._dirty = True
+        elif feld == "show_running":
+            if self.config.show_running and not self.config.minimal:
+                self._dot_timer.start()
+            else:
+                self._dot_timer.stop()
+            self._rebuild()
+        else:
+            self._rebuild()
+
+    def _open_settings(self):
+        """Einstellungsfenster oeffnen bzw. ein vorhandenes vorholen."""
+        from .settings import SettingsDialog
+
+        if self._settings is not None:
+            try:
+                self._settings.close()
+                self._settings = None
+            except RuntimeError:
+                pass
+
+        fenster = SettingsDialog(self)
+        fenster.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        fenster.destroyed.connect(self._vergisst)
+        self._settings = fenster
+        fenster.show()
+        fenster.raise_()
+        fenster.activateWindow()
+
+    def _vergisst(self, *args):
+        self._settings = None
+
+    # ==================================================================
     # Kontextmenue
     # ==================================================================
 
     def _context_menu(self, index, global_pos):
         menu = QtWidgets.QMenu(self)
+
+        menu.addAction("Einstellungen…", self._open_settings)
+        menu.addSeparator()
 
         if 0 <= index < len(self.config.entries):
             entry = self.config.entries[index]

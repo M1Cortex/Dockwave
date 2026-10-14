@@ -30,16 +30,14 @@ class Config:
         # --- Erscheinungsbild --------------------------------------------
         self.size = int(data.get("size", 46))            # Basisgroesse in px
         self.magnification = float(data.get("magnification", 1.85))
-        self.radius = int(data.get("radius", 190))       # Einflussradius in px
-        self.spacing = int(data.get("spacing", 8))       # Abstand zwischen Icons
+        self.radius = int(data.get("radius", 260))       # Einflussradius in px
+        self.spacing = int(data.get("spacing", 28))       # Abstand zwischen Icons
         self.padding = int(data.get("padding", 10))      # Innenabstand der Leiste
 
         # --- Verhalten ----------------------------------------------------
-        self.position = data.get("position", "bottom")
-        # Unter Windows liegt "hinter allen Fenstern" praktisch hinter
-        # allem - dort ist im Vordergrund die sinnvolle Voreinstellung.
-        self.layer = data.get(
-            "layer", "floating" if platform.IS_WIN else "desktop")
+        self.position = data.get("position", "top")
+        # Die Leiste liegt auf dem Desktop und stört damit nicht.
+        self.layer = data.get("layer", "desktop")
         self.fps = int(data.get("fps", 60))
         self.minimal = bool(data.get("minimal", False))
         self.show_running = bool(data.get("show_running", True))
@@ -167,7 +165,7 @@ class Config:
         self.padding = min(40, max(2, int(self.padding)))
         self.fps = min(144, max(24, int(self.fps)))
         if self.position not in POSITIONS:
-            self.position = "bottom"
+            self.position = "top"
         if self.layer not in LAYERS:
             self.layer = "desktop"
         return self

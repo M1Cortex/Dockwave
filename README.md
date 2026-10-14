@@ -56,15 +56,36 @@ oder `Stop-Dockwave.bat` doppelklicken.
 | Reihenfolge ändern | Icon gedrückt halten und an die neue Stelle ziehen |
 | Programm entfernen | Rechtsklick auf das Icon → **Aus Dock entfernen** |
 | Alle Programme sehen | Klick auf das Ordner-Symbol ganz rechts |
-| Einstellungen | Rechtsklick auf eine freie Stelle der Leiste |
+| Einstellungen | Rechtsklick auf eine freie Stelle der Leiste → **Einstellungen…** |
 
 Deine Auswahl wird gespeichert und beim nächsten Start wiederhergestellt.
 
 Zum ersten Start füllt das Dock sich mit Programmen aus deinem Startmenü –
 also mit dem, was du selbst benutzt.
 
+### Einstellungsfenster
+
+Rechtsklick auf eine freie Stelle der Leiste → **Einstellungen…**
+
+Darin liegen **alle** Einstellungen der Leiste. Jeder Regler wirkt sofort –
+beim Verschieben siehst du, was passiert. Das Fenster legt sich neben die
+Leiste und verdeckt sie nicht.
+
+| Gruppe | Einstellungen |
+|---|---|
+| **Leiste** | Icon-Größe, Vergrößerung, Einflussbereich, Abstand, Innenabstand, Bildrate |
+| **Verhalten** | Position, Ebene, laufende Programme zeigen, Minimal-Modus |
+| **Programme** | Hinzufügen, entfernen, nach oben/unten sortieren |
+
+**Standard** setzt die Zahlenwerte zurück und lässt die Programme unberührt.
+Beim Schließen wird gespeichert.
+
 ### Rechtsklick-Menü
 
+Das Menü ist der direkte Weg für die häufigsten Handgriffe; für alles andere
+gibt es das Einstellungsfenster.
+
+* **Einstellungen…** – das ganze Fenster an einem Ort
 * **Programm hinzufügen…** – Dateiauswahl für mehrere Programme
 * **Minimal-Modus** – kompakte Leiste ohne Vergrößerung
 * **Laufende Programme zeigen** – weiße Punkte unter laufenden Programmen
@@ -156,6 +177,7 @@ Dockwave/
 │   ├── app.py                 Argumente, Start, Ereignisschleife
 │   ├── config.py              Einstellungen und Speichern
 │   ├── dock_window.py         Fenster, Layout, Zeichnen, Maus
+│   ├── settings.py            Das Einstellungsfenster
 │   ├── magnify.py             Kurve der Vergrößerung
 │   ├── icons.py               Icon-Beschaffung und -Cache
 │   ├── platform.py            Plattform-Auswahl (macOS / Windows / sonst)
@@ -168,6 +190,7 @@ Dockwave/
     ├── platform_test.py       Windows-Anbindung (Icons, .lnk, laufende Prozesse)
     ├── smoke_test.py          Layout, Stetigkeit, Rendern
     ├── interaction_test.py    Klicks, Ziehen, Drop, Speichern
+    ├── settings_test.py       Das Einstellungsfenster
     └── bench.py               Bildlaufzeit
 ```
 
