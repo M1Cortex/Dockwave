@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 
 from . import platform
 
@@ -72,9 +73,19 @@ class Config:
 
     # ------------------------------------------------------------------
     def save(self):
-        """Atomar auf die Platte schreiben."""
+        """Atomar auf die Platte schreiben, mit Sicherung des Vorgaengers."""
         try:
             os.makedirs(APP_DIR, exist_ok=True)
+
+            # Vor dem Ueberschreiben die bisherige Fassung sichern. Ein
+            # versehentliches Leerschreiben - etwa durch ein Programm, das
+            # im Test die echte Datei benutzt - waere so rueckgaengig zu machen.
+            if os.path.exists(CONFIG_PATH):
+                try:
+                    shutil.copy2(CONFIG_PATH, CONFIG_PATH + ".bak")
+                except OSError:
+                    pass
+
             data = {
                 "entries": self.entries,
                 "size": self.size,
