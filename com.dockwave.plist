@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Autostart fuer Dockwave.
+
+  Installation:
+    1. Pfad unten anpassen (Rechtsklick auf den Ordner, "Pfad kopieren")
+    2. cp com.dockwave.plist ~/Library/LaunchAgents/
+    3. launchctl load ~/Library/LaunchAgents/com.dockwave.plist
+
+  Entfernen:
+    launchctl unload ~/Library/LaunchAgents/com.dockwave.plist
+    rm ~/Library/LaunchAgents/com.dockwave.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dockwave.dock</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/PFAD/ZU/Dockwave/.venv/bin/python</string>
+        <string>/PFAD/ZU/Dockwave/main.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/PFAD/ZU/Dockwave</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/dockwave.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/dockwave.log</string>
+</dict>
+</plist>

@@ -1,0 +1,20 @@
+# Zeilenenden festnageln - sonst zerbricht Start-Dockwave.command unter macOS.
+# Git wandelt ohne diese Datei je nach System CRLF <-> LF um.
+
+* text=auto eol=lf
+
+# Windows-Stapelskripte brauchen CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Alles, was ein Skript oder ein Text ist, bleibt LF
+*.command text eol=lf
+*.plist text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Binaeres Zeug nicht anfassen
+*.png binary
+*.icns binary
+*.ico binary
