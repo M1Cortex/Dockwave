@@ -414,6 +414,36 @@ def laufen():
     dialog.resize(dialog.sizeHint())
     QtWidgets.QApplication.processEvents()
 
+    print("\n== Das Panel sitzt mittig ==")
+
+    def _ueberhang():
+        links = 0.0 - dock._panel_rect.left()
+        rechts = dock._panel_rect.right() - dock.width()
+        return links, rechts
+
+    # Fuer diese Pruefung genuegen Programme - Trenner stoeren hier nur.
+    vorherige_eintraege = [dict(e) for e in cfg.entries]
+    dock.config.padding = config_mod.PADDING_MAX
+    for n in range(4, 10):
+        dock.config.entries = [{"type": APP, "path": "/a/%02d.app" % i}
+                               for i in range(n)] + [{"type": STACK}]
+        dock._recompute_window_geometry()
+        dock.setGeometry(0, dock.y(), 800, dock.height())
+        dock._cursor_x = -1.0e9
+        dock._cursor_y = -1.0e9
+        dock._layout(-1.0e9)
+        links, rechts = _ueberhang()
+        check(abs(links - rechts) < 0.5,
+              "bei %d Programmen ragt links und rechts gleich viel heraus "
+              "(%.0f / %.0f px)" % (n, links, rechts))
+    check(dock._panel_rect.width() > dock.width(),
+          "und es ist ueberhaupt breiter als das Fenster (%d > %d px)"
+          % (dock._panel_rect.width(), dock.width()))
+
+    cfg.entries = vorherige_eintraege
+    dock.config.padding = 10
+    dock._neu_aufbauen()
+
     print("\n== Die Pfeile bleiben benutzbar ==")
     dock._neu_aufbauen()
     anfang = [dict(e) for e in cfg.entries]

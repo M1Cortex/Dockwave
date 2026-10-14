@@ -237,10 +237,15 @@ class DockWindow(QtWidgets.QWidget):
 
         # Lage der Leiste in der Ruhelage. Nur dagegen wird der Cursor
         # gerechnet - das entkoppelt Cursorposition und Leistenbreite.
+        #
+        # Hier muss dasselbe gerechnet werden wie in _layout(): mittig ist
+        # der *Inhalt*, ohne Innenabstand. Waere hier die Gesamtbreite
+        # angesetzt, wuerde der Cursor um genau den Innenabstand versetzt
+        # gemessen - das Icon unter dem Zeiger waere dann nicht mehr das
+        # mittlere, sondern eines daneben.
         rest_centers, rest_sizes = self._rest_layout()
-        rest_left, _ = self._edges(rest_centers, rest_sizes)
-        self._rest_offset = ((self.width()
-                              - self._panel_width(rest_centers, rest_sizes))
+        rest_left, rest_right = self._edges(rest_centers, rest_sizes)
+        self._rest_offset = ((self.width() - (rest_right - rest_left))
                              / 2.0 - rest_left)
         self._mask_key = None
         self._panel_cache = None
@@ -371,9 +376,16 @@ class DockWindow(QtWidgets.QWidget):
         centers, used, _ = self._centers_and_sizes(cursor_local, gate, cursor_y)
 
         # Die tatsaechliche Leiste mittig im Fenster platzieren.
+        #
+        # Wichtig: Mittig ist der *Inhalt* - die Icons ohne Innenabstand.
+        # Rechnet man mit der Gesamtbreite (Icons plus Innenabstand) und
+        # zieht den Innenabstand dann noch einmal ab, sitzt das Panel genau
+        # um diesen Betrag zu weit links. Bei breiter Leiste ragt es dann
+        # links aus dem Fenster heraus und wird dort eckig abgeschnitten,
+        # waehrend rechts die runden Ecken sichtbar bleiben.
         left_edge, right_edge = self._edges(centers, used)
-        width = (right_edge - left_edge) + 2 * pad
-        offset = (self.width() - width) / 2.0 - left_edge
+        inhalt = right_edge - left_edge
+        offset = (self.width() - inhalt) / 2.0 - left_edge
 
         hover = -1
         if gate > 0.0:
@@ -392,7 +404,7 @@ class DockWindow(QtWidgets.QWidget):
         ]
 
         self._panel_rect = QtCore.QRectF(offset + left_edge - pad, SHADOW,
-                                         width, content_h)
+                                         inhalt + 2 * pad, content_h)
 
         self._update_tooltip(hover)
 
