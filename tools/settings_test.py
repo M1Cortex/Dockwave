@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import dockwave.config as config_mod                        # noqa: E402
 from dockwave.config import APP, SEPARATOR, STACK, Config    # noqa: E402
 from dockwave.dock_window import DockWindow                  # noqa: E402
-from dockwave.qt import QtWidgets                      # noqa: E402
+from dockwave.qt import QtCore, QtWidgets              # noqa: E402
 from dockwave.settings import SettingsDialog          # noqa: E402
 
 FAILURES = []
@@ -231,6 +231,48 @@ def laufen():
     dialog.close()
     with open(config_mod.CONFIG_PATH, encoding="utf-8") as fh:
         check(json.load(fh)["radius"] == 300, "der letzte Stand liegt auf der Platte")
+
+    print("\n== Das Rechtsklick-Menue wiederholt nichts ==")
+    dock._rebuild()
+
+    def _menue_lesen(index):
+        """Das Menue aufbauen, aber nicht anzeigen."""
+        gefangen = {}
+
+        def statt_anzeigen(self, pos):
+            gefangen["text"] = [a.text() for a in self.actions() if a.text()]
+
+        original = QtWidgets.QMenu.exec
+        QtWidgets.QMenu.exec = statt_anzeigen
+        try:
+            dock._context_menu(index, QtCore.QPoint(10, 10))
+        finally:
+            QtWidgets.QMenu.exec = original
+        return gefangen.get("text", [])
+
+    am_icon = _menue_lesen(next(i for i, e in enumerate(dock.config.entries)
+                            if e["type"] == APP))
+    am_ordner = _menue_lesen(next((i for i, e in enumerate(dock.config.entries)
+                                   if e["type"] == STACK), -1))
+    leer = _menue_lesen(-1)
+
+    check("Einstellungen…" in leer,
+          "das Menue fuehrt zum Einstellungsfenster")
+    check("Aus Dock entfernen" in am_icon,
+          "am Programm steht weiterhin 'Aus Dock entfernen'")
+    check("Öffnen" in am_icon, "am Programm steht weiterhin 'Öffnen'")
+    check("Ordner ausblenden" in am_ordner,
+          "am Ordner steht weiterhin 'Ordner ausblenden'")
+    check("Dock schließen" in leer, "das Menue kann das Dock beenden")
+
+    doppelt = ("Position", "Ebene", "Icon-Größe", "Abstand", "Einflussbereich",
+               "Vergrößerung", "Minimal-Modus", "Laufende Programme")
+    gefunden = sorted({t for t in doppelt
+                       if any(t == x or x.startswith(t) for x in leer)})
+    check(not gefunden, "im Menue steht keine Einstellung doppelt (%s)"
+          % (", ".join(gefunden) or "-"))
+    check(len(leer) <= 4,
+          "das Menue ist kurz geworden: %s" % ", ".join(leer))
 
     dock.close()
 

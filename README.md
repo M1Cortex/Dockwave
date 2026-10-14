@@ -82,18 +82,24 @@ Beim Schließen wird gespeichert.
 
 ### Rechtsklick-Menü
 
-Das Menü ist der direkte Weg für die häufigsten Handgriffe; für alles andere
-gibt es das Einstellungsfenster.
+Das Menü ist bewusst kurz und enthält nur, was man im Alltag braucht.
+**Einstellungen stehen ausschließlich im Einstellungsfenster** — nicht doppelt
+hier.
 
 * **Einstellungen…** – das ganze Fenster an einem Ort
 * **Programm hinzufügen…** – Dateiauswahl für mehrere Programme
-* **Minimal-Modus** – kompakte Leiste ohne Vergrößerung
-* **Laufende Programme zeigen** – weiße Punkte unter laufenden Programmen
-* **Ebene** – *Immer sichtbar* / *Auf dem Desktop* / *Ganz oben*
-* **Position** – unten / oben / links / rechts
-* **Icon-Größe** – 32 bis 68 px
-* **Vergrößerung** – *Aus* bis *Kräftig*
 * **Dock schließen** – Programm beenden
+
+Rechtsklick **auf ein Programm** zusätzlich:
+
+* **Öffnen**
+* **Im Explorer anzeigen**
+* **Aus Dock entfernen**
+
+Rechtsklick **auf den Ordner** zusätzlich:
+
+* **Ordner öffnen**
+* **Ordner ausblenden**
 
 ---
 

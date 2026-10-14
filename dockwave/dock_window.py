@@ -780,64 +780,9 @@ class DockWindow(QtWidgets.QWidget):
         menu.addSeparator()
         menu.addAction(_add_label(), self._add_via_dialog)
 
-        minimal = menu.addAction("Minimal-Modus")
-        minimal.setCheckable(True)
-        minimal.setChecked(self.config.minimal)
-        minimal.triggered.connect(self._toggle_minimal)
-
-        dots = menu.addAction("Laufende Programme zeigen")
-        dots.setCheckable(True)
-        dots.setChecked(self.config.show_running)
-        dots.triggered.connect(self._toggle_running)
-
-        self._radio_submenu(menu, "Ebene", (
-            ("Auf dem Desktop", "desktop"),
-            ("Immer sichtbar", "floating"),
-            ("Ganz oben", "top"),
-        ), self.config.layer, self._set_layer)
-
-        self._radio_submenu(menu, "Position", (
-            ("Unten", "bottom"), ("Oben", "top"),
-            ("Links", "left"), ("Rechts", "right"),
-        ), self.config.position, self._set_position)
-
-        self._radio_submenu(menu, "Icon-Größe",
-                            [(f"{v} px", str(v)) for v in (32, 40, 46, 56, 68)],
-                            str(self.config.size), self._set_size_raw)
-
-        self._radio_submenu(menu, "Abstand", (
-            ("Anstoßend", "0"),
-            ("Eng", "4"),
-            ("Normal", "8"),
-            ("Weit", "16"),
-            ("Sehr weit", "28"),
-        ), str(self.config.spacing), self._set_spacing_raw)
-
-        self._radio_submenu(menu, "Einflussbereich", (
-            ("Nur Nachbarn", "110"),
-            ("Normal", "190"),
-            ("Weit", "260"),
-            ("Ganze Leiste", "340"),
-        ), str(self.config.radius), self._set_radius_raw)
-
-        self._radio_submenu(menu, "Vergrößerung", (
-            ("Aus (klein)", "1.0"), ("Dezent", "1.35"),
-            ("Standard", "1.85"), ("Kräftig", "2.3"),
-        ), str(self.config.magnification), self._set_mag_raw)
-
         menu.addSeparator()
         menu.addAction("Dock schließen", self.quit_app)
         menu.exec(global_pos)
-
-    @staticmethod
-    def _radio_submenu(parent, title, options, current, handler):
-        sub = parent.addMenu(title)
-        for label, value in options:
-            action = sub.addAction(label)
-            action.setCheckable(True)
-            action.setChecked(value == current)
-            action.triggered.connect(lambda _checked=False, v=value: handler(v))
-        return sub
 
     def _remove(self, index):
         self.config.remove_index(index)
@@ -850,49 +795,6 @@ class DockWindow(QtWidgets.QWidget):
             return
         for path in paths:
             self.config.add_app(path)
-        self._rebuild()
-        self.config.save()
-
-    def _toggle_minimal(self, checked=False):
-        self.config.minimal = not self.config.minimal
-        self._rebuild()
-        self.config.save()
-
-    def _toggle_running(self, checked=False):
-        self.config.show_running = not self.config.show_running
-        self._rebuild()
-        self.config.save()
-
-    def _set_layer(self, value):
-        self.config.layer = value
-        self._apply_layer()
-        self.config.save()
-
-    def _set_position(self, value):
-        self.config.position = value
-        self._screen = QtGui.QGuiApplication.primaryScreen()
-        self._recompute_window_geometry()
-        self.config.save()
-
-    def _set_size_raw(self, value):
-        self.config.size = int(value)
-        self._rebuild()
-        self.config.save()
-
-    def _set_spacing_raw(self, value):
-        """Abstand zwischen den Icons."""
-        self.config.spacing = int(value)
-        self._rebuild()
-        self.config.save()
-
-    def _set_radius_raw(self, value):
-        """Einflussradius: wie viele Nachbarn mit herangezogen werden."""
-        self.config.radius = int(value)
-        self._rebuild()
-        self.config.save()
-
-    def _set_mag_raw(self, value):
-        self.config.magnification = float(value)
         self._rebuild()
         self.config.save()
 
