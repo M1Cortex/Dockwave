@@ -17,6 +17,11 @@ STACK = "stack"        # der "Ordner", der alle Apps gruppiert zeigt
 LAYERS = ("desktop", "floating", "top")
 POSITIONS = ("bottom", "top", "left", "right")
 
+# Grenzen des Innenabstands. Er wirkt nur in der Breite; mit dieser Grenze
+# passt eine vollstaendige Leiste auch mit vielen Programmen auf den Bildschirm.
+PADDING_MIN = 2
+PADDING_MAX = 40
+
 
 class Config:
     """Alle Einstellungen des Docks inklusive der Icon-Reihenfolge."""
@@ -173,7 +178,7 @@ class Config:
         self.magnification = min(3.5, max(1.0, float(self.magnification)))
         self.radius = min(600, max(40, int(self.radius)))
         self.spacing = min(40, max(0, int(self.spacing)))
-        self.padding = min(100, max(2, int(self.padding)))
+        self.padding = min(PADDING_MAX, max(PADDING_MIN, int(self.padding)))
         self.fps = min(144, max(24, int(self.fps)))
         if self.position not in POSITIONS:
             self.position = "top"

@@ -146,7 +146,9 @@ def laufen():
     dialog._setze("fps", 5)
     check(cfg.fps == 24, "Bildrate begrenzt auf 24 (%d)" % cfg.fps)
     dialog._setze("padding", 999)
-    check(cfg.padding == 100, "Innenabstand begrenzt auf 100 (%d)" % cfg.padding)
+    check(cfg.padding == config_mod.PADDING_MAX,
+          "Innenabstand begrenzt auf %d (%d)"
+          % (config_mod.PADDING_MAX, cfg.padding))
 
     print("\n== Position und Ebene wirken auf das Fenster ==")
     unten = dock.y()
@@ -294,13 +296,14 @@ def laufen():
     dock._cursor_y = -1.0e9
 
     schieber = dialog._regler["padding"][0]
-    check((schieber.minimum(), schieber.maximum()) == (2, 100),
+    klein, gross = config_mod.PADDING_MIN, config_mod.PADDING_MAX
+    check((schieber.minimum(), schieber.maximum()) == (klein, gross),
           "der Regler laeuft von %d bis %d px"
           % (schieber.minimum(), schieber.maximum()))
 
-    schieber.setValue(2)
+    schieber.setValue(klein)
     eng = _masse()
-    schieber.setValue(100)
+    schieber.setValue(gross)
     weit = _masse()
     schieber.setValue(10)
     normal = _masse()
@@ -311,8 +314,8 @@ def laufen():
 
     # --- Das Herz der Sache: nach links und rechts, niemals nach oben ---
     check(_ist(weit["panel_hoch"], eng["panel_hoch"]),
-          "die Panelhoehe bleibt exakt gleich: %.1f px bei 2 und %.1f px bei 100"
-          % (eng["panel_hoch"], weit["panel_hoch"]))
+          "die Panelhoehe bleibt exakt gleich: %.1f px bei %d und %.1f px bei %d"
+          % (eng["panel_hoch"], klein, weit["panel_hoch"], gross))
     check(weit["fenster"][1] == eng["fenster"][1],
           "das Fenster waechst nicht in die Hoehe (%d px in beiden)"
           % eng["fenster"][1])
@@ -323,24 +326,24 @@ def laufen():
           "oben und unten aendern sich nicht (%.0f px)" % eng["oben"])
 
     # --- Und nach links/rechts plus zwischen den Icons ---
-    check(_ist(eng["links"], 2) and _ist(weit["links"], 100),
+    check(_ist(eng["links"], klein) and _ist(weit["links"], gross),
           "links steht der eingestellte Abstand: %.0f px bzw. %.0f px"
           % (eng["links"], weit["links"]))
-    check(_ist(eng["rechts"], 2) and _ist(weit["rechts"], 100),
+    check(_ist(eng["rechts"], klein) and _ist(weit["rechts"], gross),
           "rechts genauso: %.0f px bzw. %.0f px"
           % (eng["rechts"], weit["rechts"]))
     check(eng["icons"] == weit["icons"],
           "die Icons selbst bleiben gleich gross (%.0f px)" % eng["icons"][0])
-    check(_ist(weit["abstaende"][0] - eng["abstaende"][0], 100 - 2),
+    check(_ist(weit["abstaende"][0] - eng["abstaende"][0], gross - klein),
           "die Icons ruecken auseinander: %.0f -> %.0f px"
           % (eng["abstaende"][0], weit["abstaende"][0]))
-    check(_ist(weit["abstaende"][0], cfg.spacing + 100),
+    check(_ist(weit["abstaende"][0], cfg.spacing + gross),
           "der Abstand ist 'Abstand' + Innenabstand = %.0f px"
           % weit["abstaende"][0])
     check(cfg.spacing == 28,
           "der eigene Regler 'Abstand' bleibt unberuehrt (%d px)" % cfg.spacing)
 
-    schritt = 100 - 2
+    schritt = gross - klein
     erwartet = 2 * schritt + schritt * len(weit["abstaende"])
     check(_ist(weit["panel_breit"] - eng["panel_breit"], erwartet),
           "in die Breite waechst das Panel um Rand 2x%d px und %d Iconabstaende"
@@ -360,9 +363,10 @@ def laufen():
         check(json.load(fh)["padding"] == 20, "und ist gespeichert")
 
     dialog._setze("padding", 999)
-    check(cfg.padding == 100, "zu grosse Werte werden begrenzt (%d)" % cfg.padding)
+    check(cfg.padding == gross, "zu grosse Werte werden begrenzt (%d)"
+          % cfg.padding)
     dialog._setze("padding", -5)
-    check(cfg.padding == 2, "zu kleine Werte ebenso (%d)" % cfg.padding)
+    check(cfg.padding == klein, "zu kleine Werte ebenso (%d)" % cfg.padding)
 
     schieber.setValue(10)
     dock._layout(dock._cursor_x)
@@ -372,7 +376,7 @@ def laufen():
           % (flaeche.width(), dock._panel_rect.width()))
 
     print("\n== Innenabstand beim Vergrößern ==")
-    for wert in (2, 100):
+    for wert in (klein, gross):
         schieber.setValue(wert)
         dock._cursor_x = dock._bounds[1].center().x()
         dock._cursor_y = dock._bounds[1].center().y()

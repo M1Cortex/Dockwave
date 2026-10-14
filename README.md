@@ -82,7 +82,7 @@ dazu und wirkt ausschließlich **in der Breite**: er schiebt die Icons
 auseinander und macht den Rand nach links und nach rechts größer. Die Höhe
 der Leiste ändert sich dadurch **nicht** — nur die Breite wächst. Beide Regler
 bleiben unabhängig; der tatsächliche Abstand zweier Icons ist ihre Summe.
-Werte von 2 bis 100 px.
+Werte von 2 bis 40 px.
 
 **Standard** setzt die Zahlenwerte zurück und lässt die Programme unberührt.
 Beim Schließen wird gespeichert.
