@@ -392,6 +392,181 @@ def apply_window_level(widget, layer):
 
 
 # ----------------------------------------------------------------------
+# Milchglas (Acrylic / Unschärfe hinter dem Fenster)
+# ----------------------------------------------------------------------
+#
+# Windows 11 kann den Hintergrund hinter einem Fenster selbst weichzeichnen -
+# auf der GPU, ohne dass wir dafür Rechenzeit brauchen. Genau das macht den
+# Unterschied zwischen einer deckenden Flaeche und Glas aus.
+#
+# Es gibt zwei Wege:
+#
+# * DWMWA_SYSTEM_BACKDROP_TYPE (dokumentiert, ab Windows 11 22H2) verlangt ein
+#   normal komponiertes Fenster. Qt-Fenster mit WA_TranslucentBackground sind
+#   geschichtet (WS_EX_LAYERED) - dort liefert dieser Weg nichts.
+#
+# * SetWindowCompositionAttribute mit ACCENT_ENABLE_ACRYLICBLURBEHIND wirkt
+#   auch auf geschichtete Fenster. Der Aufruf steht nicht im SDK, wird aber von
+#   user32 exportiert und ist der Weg, den auch Qt-Anwendungen gehen.
+#
+# Deshalb zuerst der zweite Weg, und der erste nur als Rueckfall.
+
+_ACCENT_DISABLED = 0
+_ACCENT_BLURBEHIND = 3
+_ACCENT_ACRYLIC = 4
+_WCA_ACCENT_POLICY = 19
+
+
+class _AccentPolicy(ctypes.Structure):
+    _fields_ = [("AccentState", ctypes.c_uint32),
+                ("AccentFlags", ctypes.c_uint32),
+                ("GradientColor", ctypes.c_uint32),
+                ("AnimationId", ctypes.c_uint32)]
+
+
+class _CompositionData(ctypes.Structure):
+    _fields_ = [("Attribute", ctypes.c_uint32),
+                ("Data", ctypes.c_void_p),
+                ("SizeOfData", ctypes.c_size_t)]
+
+
+def _hwnd_of(widget):
+    if widget is None or _user32 is None:
+        return None
+    try:
+        win = widget.windowHandle()
+        return ctypes.c_void_p(int(win.winId())) if win is not None else None
+    except Exception:
+        return None
+
+
+def _proc(name):
+    """Adresse einer Exportfunktion von user32.
+
+    `hasattr` taugt hier nicht: ctypes liefert fuer jeden Namen scheinbar
+    ein Objekt zurueck, auch wenn es die Funktion gar nicht gibt. Erst
+    GetProcAddress sagt die Wahrheit.
+    """
+    if _user32 is None:
+        return None
+    if _PROC_CACHE is None:
+        return _hole_proc(name)
+    return _PROC_CACHE.get(name) or _hole_proc(name)
+
+
+def _hole_proc(name):
+    k = ctypes.windll.kernel32
+    k.GetProcAddress.restype = ctypes.c_void_p
+    k.GetProcAddress.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+    adresse = k.GetProcAddress(_user32._handle, name.encode())
+    if _PROC_CACHE is not None:
+        _PROC_CACHE[name] = adresse
+    return adresse
+
+
+_PROC_CACHE = {}
+
+
+def _as_pointer(obj):
+    """Zeiger auf ein ctypes-Objekt -/byref passt nicht in ein c_void_p."""
+    return ctypes.cast(ctypes.pointer(obj), ctypes.c_void_p)
+
+
+def _has_accent_api():
+    return bool(_proc("SetWindowCompositionAttribute"))
+
+
+def glass_available():
+    """Kann dieses System den Hintergrund hinter einem Fenster weichzeichnen?"""
+    return _has_accent_api() or _dwmapi() is not None
+
+
+def apply_glass(widget, enabled, tint=0x30FFFFFF):
+    """Lässt Windows den Hintergrund hinter dem Fenster weichzeichnen.
+
+    `tint` ist die Farbe der Milchschicht im Format 0xAARRGGBB.
+    Liefert True, wenn es geklappt hat.
+    """
+    hwnd = _hwnd_of(widget)
+    if hwnd is None:
+        return False
+
+    try:
+        if not enabled:
+            # Zurueck auf "kein Effekt". Sonst bleibt der Weichzeichner
+            # stehen, auch wenn der Regler wieder ausgeschaltet wird.
+            policy = _AccentPolicy(_ACCENT_DISABLED, 0, 0, 0)
+            if _has_accent_api():
+                daten = _CompositionData(_WCA_ACCENT_POLICY,
+                                         _as_pointer(policy),
+                                         ctypes.sizeof(policy))
+                _aufruf_accent(hwnd, daten)
+            return _system_backdrop(widget, False)
+
+        if _has_accent_api():
+            for zustand in (_ACCENT_ACRYLIC, _ACCENT_BLURBEHIND):
+                policy = _AccentPolicy(zustand, 2, tint, 0)
+                daten = _CompositionData(_WCA_ACCENT_POLICY,
+                                         _as_pointer(policy),
+                                         ctypes.sizeof(policy))
+                if _aufruf_accent(hwnd, daten):
+                    return True
+
+        return _system_backdrop(widget, True)
+    except Exception:
+        return False
+
+
+_ACCENT_FUNKTION = ctypes.WINFUNCTYPE(
+    ctypes.c_int, ctypes.c_void_p, ctypes.POINTER(_CompositionData))
+
+
+def _aufruf_accent(hwnd, daten):
+    """SetWindowCompositionAttribute aufrufen - sie steht nicht im SDK."""
+    zeiger = _proc("SetWindowCompositionAttribute")
+    if not zeiger:
+        return False
+    funktion = _ACCENT_FUNKTION(zeiger)
+    return bool(funktion(hwnd, ctypes.byref(daten)))
+
+
+_DWMWA_SYSTEM_BACKDROP_TYPE = 38
+_DWMSBT_NONE = 1
+_DWMSBT_TRANSIENTWINDOW = 3          # Acrylic
+_DWMWA_WINDOW_CORNER_PREFERENCE = 33
+_DWMWCP_ROUND = 2
+
+
+def _dwmapi():
+    try:
+        return ctypes.WinDLL("dwmapi")
+    except OSError:
+        return None
+
+
+def _system_backdrop(widget, aktiv):
+    """Der dokumentierte Weg - wirkt nur auf nicht-geschichtete Fenster."""
+    hwnd = _hwnd_of(widget)
+    dll = _dwmapi()
+    if hwnd is None or dll is None:
+        return False
+    wert = ctypes.c_int(_DWMSBT_TRANSIENTWINDOW if aktiv else _DWMSBT_NONE)
+    dll.DwmSetWindowAttribute.argtypes = [ctypes.c_void_p, ctypes.c_uint32,
+                                          ctypes.c_void_p, ctypes.c_uint32]
+    dll.DwmSetWindowAttribute.restype = ctypes.c_long
+    ergebnis = dll.DwmSetWindowAttribute(
+        hwnd, _DWMWA_SYSTEM_BACKDROP_TYPE,
+        _as_pointer(wert), ctypes.sizeof(wert))
+    if aktiv and ergebnis == 0:
+        # Windows runde die Ecken dann selbst - sieht sauberer aus als
+        # eine von uns gezeichnete Kontur.
+        ecke = ctypes.c_int(_DWMWCP_ROUND)
+        dll.DwmSetWindowAttribute(hwnd, _DWMWA_WINDOW_CORNER_PREFERENCE,
+                                  _as_pointer(ecke), ctypes.sizeof(ecke))
+    return ergebnis == 0
+
+
+# ----------------------------------------------------------------------
 # Dateiauswahl
 # ----------------------------------------------------------------------
 

@@ -74,7 +74,7 @@ Leiste und verdeckt sie nicht.
 | Gruppe | Einstellungen |
 |---|---|
 | **Leiste** | Icon-Größe, Vergrößerung, Einflussbereich, Abstand, Innenabstand, Bildrate |
-| **Verhalten** | Position, Ebene, laufende Programme zeigen, Minimal-Modus |
+| **Verhalten** | Position, Ebene, laufende Programme zeigen, Minimal-Modus, Milchglas |
 | **Programme** | Hinzufügen, entfernen, sortieren, Trenner setzen |
 
 **Abstand** ist der Grundabstand zwischen den Icons. **Innenabstand** kommt
@@ -213,6 +213,7 @@ Dockwave/
     ├── smoke_test.py          Layout, Stetigkeit, Rendern
     ├── interaction_test.py    Klicks, Ziehen, Drop, Speichern
     ├── settings_test.py       Das Einstellungsfenster
+    ├── glass_test.py          Milchglas (braucht ein echtes Fenster)
     └── bench.py               Bildlaufzeit
 ```
 
@@ -225,6 +226,17 @@ darunter weiterarbeiten. Gattermaske auf das Panel: Klicks neben der Leiste
 fallen an die Fenster darunter durch.
 
 **Nur eine Instanz.** Ein zweiter Start beendet sich sofort mit einem Hinweis.
+
+**Milchglas.** Die Leiste kann den Hintergrund hinter sich weichzeichnen
+lassen – Acrylic, wie Windows 11 es mitbringt. Das macht Windows selbst auf
+der Grafikkarte, deshalb kostet es **keine Rechenzeit**: gemessen 0,9 ms pro
+Bild, gleich wie ohne Effekt.
+
+Echte Brechung des Hintergrunds ist damit **nicht** möglich. Sie würde
+erfordern, den Bildschirm bei jedem Bild auszulesen – gemessen **16,5 ms**,
+und zwar unabhängig von der Größe des Ausschnitts. Das ist allein das ganze
+Budget eines 60-Bild-Schrittes (16,67 ms), noch bevor irgendetwas gezeichnet
+wurde. Darum bleibt die Leiste eine milchige Fläche statt einer Linse.
 
 **Plattform-Trennung.** Alles außer `platform_*.py` ist betriebssystemneutral.
 Die Windows-Anbindung nutzt nur `ctypes`, braucht also keine zusätzlichen

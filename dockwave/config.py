@@ -46,6 +46,10 @@ class Config:
         self.fps = int(data.get("fps", 60))
         self.minimal = bool(data.get("minimal", False))
         self.show_running = bool(data.get("show_running", True))
+        # Milchglas: Windows zeichnet den Hintergrund hinter der Leiste selbst
+        # weich. Kostet keine Rechenzeit, weil es auf der GPU passiert.
+        self.glass = bool(data.get("glass", True))
+        self.glass_tint = int(data.get("glass_tint", 0x30FFFFFF))
 
         # --- Standard-Apps beim ersten Start ------------------------------
         if not self.entries:
@@ -101,6 +105,8 @@ class Config:
                 "fps": self.fps,
                 "minimal": self.minimal,
                 "show_running": self.show_running,
+                "glass": self.glass,
+                "glass_tint": self.glass_tint,
             }
             tmp = CONFIG_PATH + ".tmp"
             with open(tmp, "w", encoding="utf-8") as fh:
@@ -180,6 +186,7 @@ class Config:
         self.spacing = min(40, max(0, int(self.spacing)))
         self.padding = min(PADDING_MAX, max(PADDING_MIN, int(self.padding)))
         self.fps = min(144, max(24, int(self.fps)))
+        self.glass_tint = max(0, min(0xFFFFFFFF, int(self.glass_tint)))
         if self.position not in POSITIONS:
             self.position = "top"
         if self.layer not in LAYERS:

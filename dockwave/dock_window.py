@@ -570,7 +570,17 @@ class DockWindow(QtWidgets.QWidget):
             if visible:
                 self.show()
         platform.apply_window_level(self, self.config.layer)
+        self._apply_glass()
         self.raise_()
+
+    def _apply_glass(self):
+        """Milchglas ein- oder ausschalten.
+
+        Der Weichzeichner gehoert dem Fenster, nicht dem Panel. Er muss darum
+        nach jedem Anlegen des Fensters erneut gesetzt werden - beim Wechsel der
+        Ebene wird das Fenster neu eingehängt und verliert die Eigenschaft.
+        """
+        platform.apply_glass(self, self.config.glass, self.config.glass_tint)
 
     def _window_flags(self):
         flags = (QtCore.Qt.WindowType.FramelessWindowHint
@@ -773,6 +783,8 @@ class DockWindow(QtWidgets.QWidget):
         """
         if feld == "layer":
             self._apply_layer()
+        elif feld == "glass":
+            self._apply_glass()
         elif feld == "position":
             self._screen = QtGui.QGuiApplication.primaryScreen()
             self._recompute_window_geometry()

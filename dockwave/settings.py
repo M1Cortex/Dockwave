@@ -43,15 +43,15 @@ class SettingsDialog(QtWidgets.QDialog):
 
     def _aufbauen(self):
         wurzel = QtWidgets.QVBoxLayout(self)
-        wurzel.setContentsMargins(14, 12, 14, 12)
-        wurzel.setSpacing(10)
+        wurzel.setContentsMargins(12, 10, 12, 10)
+        wurzel.setSpacing(8)
 
         # --- Zahlenwerte -------------------------------------------------
         zahlen = QtWidgets.QGroupBox("Leiste")
         zl = QtWidgets.QGridLayout(zahlen)
         zl.setHorizontalSpacing(10)
-        zl.setVerticalSpacing(6)
-        zl.setContentsMargins(10, 8, 10, 10)
+        zl.setVerticalSpacing(4)
+        zl.setContentsMargins(10, 6, 10, 8)
 
         self._schieber(zl, 0, "size", "Icon-Größe", 24, 96, "px",
                        lambda w: self._setze("size", w))
@@ -71,8 +71,8 @@ class SettingsDialog(QtWidgets.QDialog):
         wahl = QtWidgets.QGroupBox("Verhalten")
         wl = QtWidgets.QGridLayout(wahl)
         wl.setHorizontalSpacing(10)
-        wl.setVerticalSpacing(6)
-        wl.setContentsMargins(10, 8, 10, 10)
+        wl.setVerticalSpacing(4)
+        wl.setContentsMargins(10, 6, 10, 8)
 
         self.auswahl_position = self._auswahl(wl, 0, 0, "Position", POSITIONS)
         self.auswahl_position.currentIndexChanged.connect(
@@ -96,6 +96,13 @@ class SettingsDialog(QtWidgets.QDialog):
         # auf einmal doppelt so breit wird.
         wl.addWidget(self.anzeige_laufend, 2, 0, 1, 2)
         wl.addWidget(self.anzeige_minimal, 3, 0, 1, 2)
+
+        self.anzeige_glas = QtWidgets.QCheckBox("Milchglas")
+        self.anzeige_glas.setToolTip(
+            "Windows zeichnet den Hintergrund hinter der Leiste weich.\n"
+            "Kostet keine Rechenzeit, weil es auf der Grafikkarte passiert.")
+        self.anzeige_glas.toggled.connect(lambda w: self._setze("glass", w))
+        wl.addWidget(self.anzeige_glas, 4, 0, 1, 2)
         wl.setColumnStretch(1, 1)
         wurzel.addWidget(wahl)
 
@@ -103,7 +110,7 @@ class SettingsDialog(QtWidgets.QDialog):
         programme = QtWidgets.QGroupBox("Programme")
         pl = QtWidgets.QVBoxLayout(programme)
         pl.setSpacing(6)
-        pl.setContentsMargins(10, 8, 10, 10)
+        pl.setContentsMargins(10, 6, 10, 8)
 
         zeile = QtWidgets.QHBoxLayout()
         self.liste = QtWidgets.QListWidget()
@@ -195,6 +202,11 @@ class SettingsDialog(QtWidgets.QDialog):
         self._combo_setzen(self.auswahl_ebene, c.layer)
         self.anzeige_laufend.setChecked(bool(c.show_running))
         self.anzeige_minimal.setChecked(bool(c.minimal))
+        self.anzeige_glas.setChecked(bool(c.glass))
+        self.anzeige_glas.setEnabled(platform.glass_available())
+        self.anzeige_glas.setToolTip(
+            self.anzeige_glas.toolTip() if platform.glass_available()
+            else "Dieses System zeichnet den Hintergrund nicht weich.")
         self._liste_auffuellen()
         self._fuellt = True
 
@@ -324,13 +336,15 @@ class SettingsDialog(QtWidgets.QDialog):
         frisch = Config()
         frisch.entries = list(self.config.entries)
         for feld in ("size", "magnification", "radius", "spacing", "padding",
-                     "fps", "position", "layer", "show_running", "minimal"):
+                     "fps", "position", "layer", "show_running", "minimal",
+                     "glass", "glass_tint"):
             setattr(self.config, feld, getattr(frisch, feld))
         self.config.clamped()
         for feld in ("size", "magnification", "radius", "spacing",
                      "padding", "fps"):
             self.dock._anwenden(feld)
         self.dock._anwenden("layer")
+        self.dock._anwenden("glass")
         self.config.save()
         self._lesen()
 

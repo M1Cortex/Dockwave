@@ -31,7 +31,8 @@ PRUEFUNGEN = [0]
 # Felder, die im Fenster bedienbar sein muessen - eine feste Liste, damit
 # eine neue Einstellung nicht stillschweigend fehlt.
 SOLL_FELDER = ("size", "magnification", "radius", "spacing", "padding",
-               "fps", "position", "layer", "show_running", "minimal")
+               "fps", "position", "layer", "show_running", "minimal",
+               "glass")
 
 
 def check(condition, message):
@@ -100,7 +101,8 @@ def laufen():
               % (feld, ", ".join(sorted(werte))))
         bedienbar.add(feld)
     schalter = {"show_running": dialog.anzeige_laufend,
-                "minimal": dialog.anzeige_minimal}
+                "minimal": dialog.anzeige_minimal,
+                "glass": dialog.anzeige_glas}
     bedienbar |= set(schalter)
     for feld in SOLL_FELDER:
         check(feld in bedienbar, "%s ist bedienbar" % feld)
@@ -108,7 +110,7 @@ def laufen():
     check(not ueber, "keine Bedienelemente ohne Wirkung (%s)"
           % (", ".join(sorted(ueber)) or "-"))
     check(all(w is not None for w in schalter.values()),
-          "die beiden Schalter sind vorhanden")
+          "die drei Schalter sind vorhanden")
 
     print("\n== Die Regler zeigen den gespeicherten Stand ==")
     for feld in ("size", "spacing", "padding", "fps"):
@@ -122,6 +124,8 @@ def laufen():
           "Schalter 'Laufende Programme' stimmt")
     check(dialog.anzeige_minimal.isChecked() == cfg.minimal,
           "Schalter 'Minimal-Modus' stimmt")
+    check(dialog.anzeige_glas.isChecked() == cfg.glass,
+          "Schalter 'Milchglas' stimmt")
     check(dialog.liste.count() == len(cfg.entries),
           "Programmliste zeigt alle %d Eintraege" % len(cfg.entries))
 

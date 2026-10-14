@@ -83,6 +83,18 @@ def apply_window_level(widget, layer):
     return _impl.apply_window_level(widget, layer)
 
 
+def glass_available():
+    """Kann das System den Hintergrund hinter dem Fenster weichzeichnen?"""
+    fn = getattr(_impl, "glass_available", None)
+    return bool(fn()) if fn else False
+
+
+def apply_glass(widget, enabled, tint=0x30FFFFFF):
+    """Hintergrund hinter dem Fenster weichzeichnen (Acrylic/Blur)."""
+    fn = getattr(_impl, "apply_glass", None)
+    return bool(fn(widget, enabled, tint)) if fn else False
+
+
 def open_app_panel(parent=None):
     return _impl.open_app_panel(parent)
 
