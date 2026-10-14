@@ -269,6 +269,110 @@ def laufen():
     check(_trenner() == vor_entfernen - 1,
           "ein Trenner laesst sich wieder entfernen (%d)" % _trenner())
 
+    print("\n== Innenabstand ==")
+
+    def _masse():
+        """Alle Groessen, die der Innenabstand beeinflussen darf."""
+        dock._layout(dock._cursor_x)
+        panel = dock._panel_rect
+        return {
+            "panel_breit": panel.width(),
+            "panel_hoch": panel.height(),
+            "panel_links": panel.left(),
+            "fenster": (dock.width(), dock.height()),
+            "icons": [round(b.width(), 2) for b in dock._bounds],
+            "abstaende": [round(dock._bounds[i + 1].left()
+                                - dock._bounds[i].right(), 2)
+                          for i in range(len(dock._bounds) - 1)],
+            "linker_abstand": round(dock._bounds[0].left() - panel.left(), 2),
+            "rechter_abstand": round(panel.right() - dock._bounds[-1].right(), 2),
+        }
+
+    dock._cursor_x = -1.0e9          # Zeiger weg: reine Ruhelage
+    dock._cursor_y = -1.0e9
+
+    schieber = dialog._regler["padding"][0]
+    check((schieber.minimum(), schieber.maximum()) == (2, 40),
+          "der Regler laeuft von %d bis %d px"
+          % (schieber.minimum(), schieber.maximum()))
+
+    schieber.setValue(2)
+    eng = _masse()
+    schieber.setValue(40)
+    weit = _masse()
+    schieber.setValue(10)
+    normal = _masse()
+
+    # Rundungsabstand: die Rechnung laeuft ueber Gleitkommazahlen.
+    def _ist(ist, soll):
+        return abs(ist - soll) < 0.01
+
+    check(_ist(weit["panel_breit"] - eng["panel_breit"], 2 * (40 - 2)),
+          "das Panel waechst um genau 2x den Unterschied (%.1f zu %.1f px)"
+          % (eng["panel_breit"], weit["panel_breit"]))
+    check(_ist(weit["panel_hoch"] - eng["panel_hoch"], 2 * (40 - 2)),
+          "die Panelhoehe genauso (%.1f zu %.1f px)"
+          % (eng["panel_hoch"], weit["panel_hoch"]))
+    check(_ist(normal["panel_breit"] - eng["panel_breit"], 2 * (10 - 2)),
+          "und auch dazwischen stimmt es (%.1f px bei 10)"
+          % normal["panel_breit"])
+
+    check(eng["linker_abstand"] == 2 and weit["linker_abstand"] == 40,
+          "links steht der eingestellte Abstand: %d px bzw. %d px"
+          % (eng["linker_abstand"], weit["linker_abstand"]))
+    check(eng["rechter_abstand"] == 2 and weit["rechter_abstand"] == 40,
+          "rechts genauso: %d px bzw. %d px"
+          % (eng["rechter_abstand"], weit["rechter_abstand"]))
+
+    check(eng["icons"] == weit["icons"],
+          "die Icons selbst bleiben gleich gross (%s px)"
+          % eng["icons"][0])
+    check(eng["abstaende"] == weit["abstaende"],
+          "die Abstaende zwischen den Icons aendern sich nicht (%d px)"
+          % eng["abstaende"][0])
+    check(weit["fenster"][0] > eng["fenster"][0]
+          and weit["fenster"][1] > eng["fenster"][1],
+          "das Fenster waechst mit: %s zu %s" % (eng["fenster"], weit["fenster"]))
+
+    schieber.setValue(20)
+    check(cfg.padding == 20, "der Wert steht in der Konfiguration (%d)"
+          % cfg.padding)
+    with open(config_mod.CONFIG_PATH, encoding="utf-8") as fh:
+        check(json.load(fh)["padding"] == 20, "und ist gespeichert")
+
+    dialog._setze("padding", 999)
+    check(cfg.padding == 40, "zu grosse Werte werden begrenzt (%d)" % cfg.padding)
+    dialog._setze("padding", -5)
+    check(cfg.padding == 2, "zu kleine Werte ebenso (%d)" % cfg.padding)
+
+    schieber.setValue(10)
+    dock._layout(dock._cursor_x)
+    flaeche = dock.mask().boundingRect()
+    check(flaeche.width() >= dock._panel_rect.width(),
+          "die klickbare Flaeche folgt dem Panel (%d >= %.0f px)"
+          % (flaeche.width(), dock._panel_rect.width()))
+
+    print("\n== Innenabstand beim Vergrößern ==")
+    for wert in (2, 40):
+        schieber.setValue(wert)
+        dock._cursor_x = dock._bounds[1].center().x()
+        dock._cursor_y = dock._bounds[1].center().y()
+        dock._layout(dock._cursor_x)
+        panel = dock._panel_rect
+        groesstes = max(dock._bounds, key=lambda b: b.width())
+        oben = groesstes.top() - panel.top()
+        unten = panel.bottom() - groesstes.bottom()
+        check(oben >= wert - 0.01 and unten >= wert - 0.01,
+              "bei %d px Innenabstand ragt das groesste Icon nicht ueber "
+              "den Rand (oben %.0f, unten %.0f)" % (wert, oben, unten))
+        check(dock._bounds[1].center().x() == groesstes.center().x()
+              or abs(dock._bounds[1].center().x()
+                     - groesstes.center().x()) < 1.0,
+              "das groesste Icon liegt noch unter dem Zeiger")
+    schieber.setValue(10)
+    dock.leaveEvent(None)
+    dock._layout(-1.0e9)
+
     print("\n== Das Fenster waechst mit ==")
     dialog.show()
     dialog.adjustSize()
