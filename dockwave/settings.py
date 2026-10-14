@@ -109,8 +109,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.liste = QtWidgets.QListWidget()
         self.liste.setSelectionMode(
             QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.liste.setMinimumHeight(96)
-        self.liste.setMaximumHeight(150)
+        self.liste.setMinimumHeight(110)
         zeile.addWidget(self.liste, 1)
 
         spalten = QtWidgets.QVBoxLayout()
@@ -261,7 +260,7 @@ class SettingsDialog(QtWidgets.QDialog):
         for pfad in pfade:
             self.config.add_app(pfad)
         self.config.save()
-        self.dock._rebuild()
+        self.dock._neu_aufbauen()
         self._liste_auffuellen()
 
     def _programm_entfernen(self):
@@ -272,22 +271,38 @@ class SettingsDialog(QtWidgets.QDialog):
         for zeile in zeilen:
             self.config.remove_index(zeile)
         self.config.save()
-        self.dock._rebuild()
+        self.dock._neu_aufbauen()
         self._liste_auffuellen()
 
     def _programm_verschieben(self, richtung):
         zeilen = [self.liste.row(x) for x in self.liste.selectedItems()]
-        if len(zeilen) != 1:
+        if len(zeilen) == 1:
+            von = zeilen[0]
+        elif not zeilen and self.liste.currentRow() >= 0:
+            von = self.liste.currentRow()
+        else:
             return
-        von = zeilen[0]
         nach = von + richtung
         if not (0 <= nach < len(self.config.entries)):
             return
         self.config.move(von, nach)
         self.config.save()
-        self.dock._rebuild()
+        self.dock._neu_aufbauen()
+        self._markiere(nach)
+
+    def _markiere(self, zeile):
+        """Genau eine Zeile markieren.
+
+        Wichtig ist `clearSelection` davor: die Liste behaelt beim Neuaufbau
+        ihre alte Markierung. Ohne das Abwaehlen waeren nach dem Verschieben
+        zwei Zeilen markiert - die Pfeile gingen dann nicht mehr, und '-'
+        wuerde beide Eintraege loeschen.
+        """
         self._liste_auffuellen()
-        self.liste.item(nach).setSelected(True)
+        self.liste.clearSelection()
+        self.liste.setCurrentRow(zeile)
+        if 0 <= zeile < self.liste.count():
+            self.liste.item(zeile).setSelected(True)
 
     def _programm_trenner(self):
         """Trenner vor dem markierten Eintrag einfuegen, sonst ans Ende."""
@@ -295,9 +310,8 @@ class SettingsDialog(QtWidgets.QDialog):
         stelle = zeilen[0] if zeilen else len(self.config.entries)
         self.config.add_separator(stelle)
         self.config.save()
-        self.dock._rebuild()
-        self._liste_auffuellen()
-        self.liste.item(stelle).setSelected(True)
+        self.dock._neu_aufbauen()
+        self._markiere(stelle)
 
     # ==================================================================
     # Sonstiges

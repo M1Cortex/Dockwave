@@ -637,7 +637,7 @@ class DockWindow(QtWidgets.QWidget):
                 and target != drag_index):
             final = target if target < drag_index else target - 1
             self.config.move(drag_index, final)
-            self._rebuild()
+            self._neu_aufbauen()
             self.config.save()
 
     def leaveEvent(self, event):
@@ -706,6 +706,32 @@ class DockWindow(QtWidgets.QWidget):
         self._hover_index = -1
         self._dirty = True
 
+    def _neu_aufbauen(self):
+        """Nach einer Aenderung neu aufbauen - ohne Sprung und ohne Flackern.
+
+        Die Cursorposition wird vorher in Dock-Koordinaten festgehalten und
+        danach wiederhergestellt. Ohne das waere nach dem Verschieben eines
+        Groessenreglers ein anderes Icon unter dem Zeiger, und fuer ein Bild
+        faellt die Leiste auf ihre Grundgroesse zurueck - beides sieht man
+        sofort.
+        """
+        ruhe_x = (self._cursor_x - self._rest_offset
+                  if self._cursor_x > -1.0e8 else None)
+        mitte = self._icon_center_y()
+        ruhe_y = (self._cursor_y - mitte if self._cursor_y > -1.0e8 else None)
+
+        self._rebuild()
+
+        if ruhe_x is None:
+            self._cursor_x = -1.0e9
+            self._cursor_y = -1.0e9
+        else:
+            self._cursor_x = ruhe_x + self._rest_offset
+            self._cursor_y = ruhe_y + self._icon_center_y()
+        self._layout(self._cursor_x)
+        self._update_mask()
+        self._dirty = True
+
     # ==================================================================
     # Einstellungen
     # ==================================================================
@@ -729,9 +755,9 @@ class DockWindow(QtWidgets.QWidget):
                 self._dot_timer.start()
             else:
                 self._dot_timer.stop()
-            self._rebuild()
+            self._neu_aufbauen()
         else:
-            self._rebuild()
+            self._neu_aufbauen()
 
     def _open_settings(self):
         """Einstellungsfenster oeffnen bzw. ein vorhandenes vorholen."""
@@ -789,7 +815,7 @@ class DockWindow(QtWidgets.QWidget):
 
     def _remove(self, index):
         self.config.remove_index(index)
-        self._rebuild()
+        self._neu_aufbauen()
         self.config.save()
 
     def _add_via_dialog(self):
@@ -798,7 +824,7 @@ class DockWindow(QtWidgets.QWidget):
             return
         for path in paths:
             self.config.add_app(path)
-        self._rebuild()
+        self._neu_aufbauen()
         self.config.save()
 
     def quit_app(self):
@@ -841,7 +867,7 @@ class DockWindow(QtWidgets.QWidget):
                 if self.config.add_app(path) >= 0:
                     added += 1
         if added:
-            self._rebuild()
+            self._neu_aufbauen()
             self.config.save()
             event.acceptProposedAction()
         else:

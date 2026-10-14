@@ -269,9 +269,112 @@ def laufen():
     check(_trenner() == vor_entfernen - 1,
           "ein Trenner laesst sich wieder entfernen (%d)" % _trenner())
 
-    print("\n== Das Rechtsklick-Menue wiederholt nichts ==")
-    dock._rebuild()
+    print("\n== Das Fenster waechst mit ==")
+    dialog.show()
+    dialog.adjustSize()
+    klein = (dialog.liste.width(), dialog.liste.height())
+    dialog.resize(dialog.width() + 420, dialog.height() + 220)
+    QtWidgets.QApplication.processEvents()
+    gross = (dialog.liste.width(), dialog.liste.height())
+    check(gross[0] > klein[0] + 300,
+          "die Programmliste wird breiter: %d -> %d px" % (klein[0], gross[0]))
+    check(gross[1] > klein[1] + 150,
+          "die Programmliste wird hoeher: %d -> %d px" % (klein[1], gross[1]))
+    for beschriftung, box in (("Leiste", 0), ("Verhalten", 1), ("Programme", 2)):
+        gruppe = [w for w in dialog.findChildren(QtWidgets.QGroupBox)
+                  if w.title() == beschriftung][0]
+        check(gruppe.width() > dialog.width() * 0.9,
+              "die Gruppe '%s' fuellt das verbreiterte Fenster (%d px)"
+              % (beschriftung, gruppe.width()))
+    dialog.resize(dialog.sizeHint())
+    QtWidgets.QApplication.processEvents()
 
+    print("\n== Die Pfeile bleiben benutzbar ==")
+    dock._neu_aufbauen()
+    anfang = [dict(e) for e in cfg.entries]
+
+    def _knopf(zeichen):
+        for b in dialog.findChildren(QtWidgets.QPushButton):
+            if b.text() == zeichen:
+                b.click()
+                return
+        raise AssertionError("Knopf %r fehlt" % zeichen)
+
+    def _markiert():
+        return [dialog.liste.row(x) for x in dialog.liste.selectedItems()]
+
+    dialog.liste.clearSelection()
+    dialog.liste.item(0).setSelected(True)
+    _knopf("▼")
+    check(len(_markiert()) == 1,
+          "nach 'runter' ist genau eine Zeile markiert (%s)" % _markiert())
+    check(cfg.entries != anfang, "das Programm ist tatsaechlich gewandert")
+
+    _knopf("▼")          # genau der Schritt, der vorher ins Leere lief
+    check(len(_markiert()) == 1,
+          "der zweite Klick geht auch noch (%s)" % _markiert())
+    check(cfg.entries[2]["type"] == SEPARATOR,
+          "und der Stapel wandert weiter")
+
+    gewandert = cfg.entries[2].get("path")
+    _knopf("▲")
+    check(cfg.entries[1].get("path") == gewandert,
+          "'hoch' funktioniert wieder (%s)"
+          % (cfg.entries[1].get("path") or cfg.entries[1]["type"]))
+
+    trenn_stelle = next((i for i, e in enumerate(cfg.entries)
+                      if e["type"] == SEPARATOR
+                      and i + 1 < len(cfg.entries)), None)
+    check(trenn_stelle is not None,
+          "es gibt einen Trenner, den man verschieben kann")
+    if trenn_stelle is not None:
+        dialog.liste.clearSelection()
+        dialog.liste.item(trenn_stelle).setSelected(True)
+        _knopf("▼")
+        check(len(_markiert()) == 1,
+              "auch beim Trenner bleibt es bei einer Markierung (%s)"
+              % _markiert())
+        check(cfg.entries[trenn_stelle + 1]["type"] == SEPARATOR,
+              "'runter' schiebt den Trenner nach unten")
+        _knopf("▲")
+        check(cfg.entries[trenn_stelle]["type"] == SEPARATOR,
+              "'hoch' holt ihn zurueck (Stelle %d)" % trenn_stelle)
+
+    anzahl = len(cfg.entries)
+    dialog.liste.clearSelection()
+    dialog.liste.item(0).setSelected(True)
+    _knopf("▼")
+    _knopf("▲")
+    check(len(cfg.entries) == anzahl,
+          "es geht nichts verloren (%d Eintraege)" % len(cfg.entries))
+    check(dialog.liste.count() == anzahl, "die Liste ist vollstaendig")
+
+    print("\n== Ein Groessenregler laesst die Leiste nicht springen ==")
+
+    def _unter_dem_zeiger():
+        dock._layout(dock._cursor_x)
+        return dock._hover_index, [round(b.width(), 1) for b in dock._bounds]
+
+    dock._cursor_x = dock._bounds[1].center().x()
+    dock._cursor_y = dock._bounds[1].center().y()
+    for feld, wert in (("padding", 24), ("size", 60), ("padding", 8),
+                       ("spacing", 30), ("size", 46)):
+        vorher, breiten = _unter_dem_zeiger()
+        dialog._regler[feld][0].setValue(wert)
+        nachher, breiten_neu = _unter_dem_zeiger()
+        check(vorher == nachher,
+              "%s=%d: dasselbe Icon bleibt unter dem Zeiger (%s)"
+              % (feld, wert, vorher))
+        check(dock._bounds != [],
+              "%s=%d: die Leiste ist sofort gezeichnet" % (feld, wert))
+        grund = dock.config.effective_size
+        check(max(breiten_neu) > grund * 1.05,
+              "%s=%d: das Icon darunter ist vergroessert (%.0f statt %.0f px)"
+              % (feld, wert, max(breiten_neu), grund))
+        _ = breiten
+    dock.leaveEvent(None)
+
+    print("\n== Das Rechtsklick-Menue wiederholt nichts ==")
     def _menue_lesen(index):
         """Das Menue aufbauen, aber nicht anzeigen."""
         gefangen = {}
