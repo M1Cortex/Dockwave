@@ -138,6 +138,17 @@ class Config:
             return True
         return False
 
+    def add_separator(self, index=None):
+        """Fuegt einen Trenner ein - vor dem Eintrag an `index`.
+
+        Ohne `index` wandert er ans Ende der Leiste. Der Trenner ist nur ein
+        Lueckenhalter: er traegt kein Icon und wird nicht vergroessert.
+        """
+        if index is None or not (0 <= index <= len(self.entries)):
+            index = len(self.entries)
+        self.entries.insert(index, {"type": SEPARATOR})
+        return index
+
     def move(self, frm, to):
         """Verschiebt einen Eintrag (fuer Drag & Drop Sortierung)."""
         if frm == to or not (0 <= frm < len(self.entries)):

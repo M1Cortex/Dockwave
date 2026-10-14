@@ -232,6 +232,60 @@ def laufen():
     with open(config_mod.CONFIG_PATH, encoding="utf-8") as fh:
         check(json.load(fh)["radius"] == 300, "der letzte Stand liegt auf der Platte")
 
+    print("\n== Trenner einfuegen ==")
+
+    def _trenner():
+        return sum(1 for e in cfg.entries if e["type"] == SEPARATOR)
+
+    anzahl = len(cfg.entries)
+    dialog.liste.clearSelection()
+    dialog._programm_trenner()
+    check(cfg.entries[-1]["type"] == SEPARATOR,
+          "ohne Auswahl landet der Trenner am Ende")
+    check(dialog.liste.count() == anzahl + 1,
+          "die Liste zeigt den neuen Trenner (%d)" % dialog.liste.count())
+
+    dialog.liste.clearSelection()
+    dialog.liste.item(0).setSelected(True)
+    davor = cfg.entries[0]["type"]
+    dialog._programm_trenner()
+    check(cfg.entries[0]["type"] == SEPARATOR,
+          "der Trenner steht vor dem markierten Eintrag")
+    check(cfg.entries[1]["type"] == davor,
+          "der markierte Eintrag rueckt einen Platz weiter")
+
+    stand = _trenner()
+    dialog.liste.clearSelection()
+    dialog._programm_trenner()
+    check(_trenner() == stand + 1,
+          "mehrere Trenner sind moeglich (%d)" % _trenner())
+
+    letzte = max(i for i, e in enumerate(cfg.entries) if e["type"] == SEPARATOR)
+    erster_app = next(i for i, e in enumerate(cfg.entries) if e["type"] == APP)
+    check(dock._pixmaps[letzte] is None,
+          "der Trenner bekommt kein Icon, sondern wird gezeichnet")
+    dock._layout(dock.width() / 2.0)
+    check(len(dock._bounds) == len(cfg.entries),
+          "jeder Trenner belegt einen Platz in der Leiste (%d von %d)"
+          % (len(dock._bounds), len(cfg.entries)))
+    check(dock.base_sizes()[letzte] < dock.base_sizes()[erster_app],
+          "der Trenner ist schmaler als ein Icon (%.0f zu %.0f px)"
+          % (dock.base_sizes()[letzte], dock.base_sizes()[erster_app]))
+
+    with open(config_mod.CONFIG_PATH, encoding="utf-8") as fh:
+        gespeichert = json.load(fh)
+    check(sum(1 for e in gespeichert["entries"] if e["type"] == SEPARATOR)
+          == _trenner(), "die Trenner liegen auf der Platte")
+
+    dialog.liste.clearSelection()
+    zeile = next(i for i in range(dialog.liste.count())
+                 if cfg.entries[i]["type"] == SEPARATOR)
+    dialog.liste.item(zeile).setSelected(True)
+    vor_entfernen = _trenner()
+    dialog._programm_entfernen()
+    check(_trenner() == vor_entfernen - 1,
+          "ein Trenner laesst sich wieder entfernen (%d)" % _trenner())
+
     print("\n== Das Rechtsklick-Menue wiederholt nichts ==")
     dock._rebuild()
 

@@ -118,7 +118,8 @@ class SettingsDialog(QtWidgets.QDialog):
         knoepfe = (("+", "Hinzufügen…", self._programm_hinzufuegen),
                    ("-", "Aus dem Dock entfernen", self._programm_entfernen),
                    ("▲", "Nach oben", lambda: self._programm_verschieben(-1)),
-                   ("▼", "Nach unten", lambda: self._programm_verschieben(1)))
+                   ("▼", "Nach unten", lambda: self._programm_verschieben(1)),
+                   ("│", "Trenner einfügen", self._programm_trenner))
         for zeichen, hinweis, aktion in knoepfe:
             knopf = QtWidgets.QPushButton(zeichen)
             knopf.setFixedWidth(30)
@@ -287,6 +288,16 @@ class SettingsDialog(QtWidgets.QDialog):
         self.dock._rebuild()
         self._liste_auffuellen()
         self.liste.item(nach).setSelected(True)
+
+    def _programm_trenner(self):
+        """Trenner vor dem markierten Eintrag einfuegen, sonst ans Ende."""
+        zeilen = [self.liste.row(x) for x in self.liste.selectedItems()]
+        stelle = zeilen[0] if zeilen else len(self.config.entries)
+        self.config.add_separator(stelle)
+        self.config.save()
+        self.dock._rebuild()
+        self._liste_auffuellen()
+        self.liste.item(stelle).setSelected(True)
 
     # ==================================================================
     # Sonstiges

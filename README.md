@@ -75,10 +75,19 @@ Leiste und verdeckt sie nicht.
 |---|---|
 | **Leiste** | Icon-Größe, Vergrößerung, Einflussbereich, Abstand, Innenabstand, Bildrate |
 | **Verhalten** | Position, Ebene, laufende Programme zeigen, Minimal-Modus |
-| **Programme** | Hinzufügen, entfernen, nach oben/unten sortieren |
+| **Programme** | Hinzufügen, entfernen, sortieren, Trenner setzen |
 
 **Standard** setzt die Zahlenwerte zurück und lässt die Programme unberührt.
 Beim Schließen wird gespeichert.
+
+Die fünf Knöpfe neben der Programmliste:
+
+| Knopf | Wirkung |
+|---|---|
+| `+` | Programme auswählen und anhängen |
+| `-` | Markierte Einträge entfernen |
+| `▲` `▼` | Markierten Eintrag verschieben |
+| `│` | Trenner **vor** dem markierten Eintrag einfügen, sonst ans Ende |
 
 ### Rechtsklick-Menü
 
