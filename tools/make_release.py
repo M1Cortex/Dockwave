@@ -1,7 +1,7 @@
 r"""Release auf GitHub anlegen oder ergaenzen.
 
 Aufruf:
-    python tools\make_release.py v1.0.0 --notes RELEASE_NOTES.md --exe dist\Dockwave.exe
+    python tools\make_release.py v1.1.0 --notes RELEASE_NOTES.md --exe dist\Dockwave.exe
 
 Nutzt die Zugangsdaten, die Git Credential Manager nach dem Push gespeichert
 hat. Es werden keine Geheimnisse auf der Platte abgelegt und keine
