@@ -131,6 +131,16 @@ class DockWindow(QtWidgets.QWidget):
         return [max(6.0, base * 0.16) if e["type"] == SEPARATOR else float(base)
                 for e in self.config.entries]
 
+    @property
+    def _abstand(self):
+        """Abstand zwischen zwei Icons.
+
+        Der Innenabstand wirkt *auch* dazwischen: er schiebt die Icons
+        auseinander und macht die Leiste breiter. Zusammen mit dem Rand
+        bestimmt er also, wie viel Luft die Leiste hat.
+        """
+        return self.config.spacing + self.config.padding
+
     def _neutral_centers(self):
         """Icon-Mittelpunkte in Dock-Koordinaten (0 = Mitte der Leiste).
 
@@ -139,7 +149,7 @@ class DockWindow(QtWidgets.QWidget):
         wird alles um einen Versatz in die Fenstermitte geschoben.
         """
         sizes = self.base_sizes()
-        spacing = self.config.spacing
+        spacing = self._abstand
         total = sum(sizes) + spacing * max(0, len(sizes) - 1)
         centers = []
         x = -total / 2.0
@@ -497,7 +507,7 @@ class DockWindow(QtWidgets.QWidget):
 
     def _paint_drop_marker(self, p, panel):
         rect = self._bounds[self._drag_target]
-        x = rect.left() - self.config.spacing / 2.0 - 1.0
+        x = rect.left() - self._abstand / 2.0 - 1.0
         p.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 210), 3.0))
         p.drawLine(QtCore.QLineF(x, panel.top() + 10, x, panel.bottom() - 10))
 

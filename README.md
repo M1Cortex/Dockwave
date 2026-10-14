@@ -77,6 +77,11 @@ Leiste und verdeckt sie nicht.
 | **Verhalten** | Position, Ebene, laufende Programme zeigen, Minimal-Modus |
 | **Programme** | Hinzufügen, entfernen, sortieren, Trenner setzen |
 
+**Abstand** ist der Grundabstand zwischen den Icons. **Innenabstand** kommt
+dazu und wirkt an zwei Stellen: als zusätzliche Luft zwischen den Icons und
+als Abstand vom Rand des Panels. Beide Regler bleiben unabhängig; der
+tatsächliche Abstand zweier Icons ist ihre Summe.
+
 **Standard** setzt die Zahlenwerte zurück und lässt die Programme unberührt.
 Beim Schließen wird gespeichert.
 

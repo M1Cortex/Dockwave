@@ -169,6 +169,9 @@ def main():
     dock._rebuild()
 
     print("\n== Abstand und Einflussbereich ==")
+    # Der Innenabstand wirkt auch zwischen den Icons, deshalb ist die
+    # erwartete Luft nicht der Abstand allein.
+    polster = dock.config.padding
     widths = {}
     for spacing in (0, 8, 28):
         dock.config.spacing = spacing
@@ -176,9 +179,10 @@ def main():
         dock._layout(-1.0e9)
         gap = dock._bounds[1].left() - dock._bounds[0].right()
         widths[spacing] = gap
-        check(abs(gap - spacing) < 0.5,
-              "Abstand %d px ergibt genau %d px Luft (Fenster %d px)"
-              % (spacing, spacing, dock.width()))
+        check(abs(gap - (spacing + polster)) < 0.5,
+              "Abstand %d px + Innenabstand %d px ergibt %d px Luft "
+              "(Fenster %d px)" % (spacing, polster, spacing + polster,
+                                   dock.width()))
     check(widths[28] > widths[8] > widths[0],
           "mehr Abstand macht die Leiste breiter: %s"
           % ["%.0f" % v for v in widths.values()])

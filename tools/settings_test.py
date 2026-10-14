@@ -307,15 +307,19 @@ def laufen():
     def _ist(ist, soll):
         return abs(ist - soll) < 0.01
 
-    check(_ist(weit["panel_breit"] - eng["panel_breit"], 2 * (40 - 2)),
-          "das Panel waechst um genau 2x den Unterschied (%.1f zu %.1f px)"
+    check(_ist(weit["panel_breit"] - eng["panel_breit"],
+              2 * (40 - 2) + (40 - 2) * (len(weit["icons"]) - 1)),
+          "das Panel waechst um Rand *und* Iconabstand (%.1f zu %.1f px)"
           % (eng["panel_breit"], weit["panel_breit"]))
     check(_ist(weit["panel_hoch"] - eng["panel_hoch"], 2 * (40 - 2)),
           "die Panelhoehe genauso (%.1f zu %.1f px)"
           % (eng["panel_hoch"], weit["panel_hoch"]))
-    check(_ist(normal["panel_breit"] - eng["panel_breit"], 2 * (10 - 2)),
-          "und auch dazwischen stimmt es (%.1f px bei 10)"
-          % normal["panel_breit"])
+    schritt = 10 - 2
+    erwartet = 2 * schritt + schritt * len(normal["abstaende"])
+    check(_ist(normal["panel_breit"] - eng["panel_breit"], erwartet),
+          "und auch dazwischen stimmt es: Rand %dx%d, Iconabstaende %dx%d"
+          % (normal["panel_breit"] - eng["panel_breit"], schritt,
+             len(normal["abstaende"]), schritt))
 
     check(eng["linker_abstand"] == 2 and weit["linker_abstand"] == 40,
           "links steht der eingestellte Abstand: %d px bzw. %d px"
@@ -327,9 +331,14 @@ def laufen():
     check(eng["icons"] == weit["icons"],
           "die Icons selbst bleiben gleich gross (%s px)"
           % eng["icons"][0])
-    check(eng["abstaende"] == weit["abstaende"],
-          "die Abstaende zwischen den Icons aendern sich nicht (%d px)"
-          % eng["abstaende"][0])
+    check(weit["abstaende"][0] - eng["abstaende"][0] == 40 - 2,
+          "die Icons ruecken um den Innenabstand auseinander: %d -> %d px"
+          % (eng["abstaende"][0], weit["abstaende"][0]))
+    check(weit["abstaende"] == [cfg.spacing + 40] * len(weit["abstaende"]),
+          "der Abstand ist 'Abstand' + Innenabstand = %d px"
+          % weit["abstaende"][0])
+    check(cfg.spacing == 28,
+          "der eigene Regler 'Abstand' bleibt unberuehrt (%d px)" % cfg.spacing)
     check(weit["fenster"][0] > eng["fenster"][0]
           and weit["fenster"][1] > eng["fenster"][1],
           "das Fenster waechst mit: %s zu %s" % (eng["fenster"], weit["fenster"]))
